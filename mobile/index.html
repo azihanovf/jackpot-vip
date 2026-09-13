@@ -35,97 +35,35 @@
       pointer-events: none !important;
     }
   </style>
-
-
   <script id="age-gate-cookie-suppress-js">
     (() => {
-      const COOKIE_BANNER_SELECTORS = [
-        "#cookieBanner",
-        "#cookie-banner",
-        "#cookieConsent",
-        "#cookie-consent",
-        "#cookieNotice",
-        "#cookie-notice",
-        "#onetrust-banner-sdk",
-        "#onetrust-consent-sdk",
-        ".cookie-banner",
-        ".cookie-consent",
-        ".cookie-notice",
-        ".cookies-banner",
-        ".cookies-consent",
-        ".cookies-notice",
-        "[data-cookie-banner]",
-        "[data-cookie-consent]",
-        "[data-cookie-notice]",
-        '[class*="cookie"][class*="banner"]',
-        '[class*="cookie"][class*="consent"]',
-        '[class*="cookies"][class*="banner"]',
-        '[class*="cookies"][class*="consent"]',
-        '[id*="cookie"][id*="banner"]',
-        '[id*="cookie"][id*="consent"]',
-        '[id*="cookies"][id*="banner"]',
-        '[id*="cookies"][id*="consent"]'
+      const selectors = [
+        "#cookieBanner", "#cookie-banner", "#cookieConsent", "#cookie-consent",
+        "#cookieNotice", "#cookie-notice", "#onetrust-banner-sdk",
+        "#onetrust-consent-sdk", ".cookie-banner", ".cookie-consent",
+        ".cookie-notice", ".cookies-banner", ".cookies-consent",
+        ".cookies-notice", "[data-cookie-banner]", "[data-cookie-consent]",
+        "[data-cookie-notice]"
       ].join(",");
 
-      function suppressCookieBanners(root = document) {
-        if (!root || !root.querySelectorAll) return;
-
-        root.querySelectorAll(COOKIE_BANNER_SELECTORS).forEach((el) => {
-          el.hidden = true;
-          el.setAttribute("aria-hidden", "true");
-          el.style.setProperty("display", "none", "important");
-          el.style.setProperty("visibility", "hidden", "important");
-          el.style.setProperty("opacity", "0", "important");
-          el.style.setProperty("pointer-events", "none", "important");
-        });
-      }
-
-      function startCookieBannerGuard() {
-        suppressCookieBanners();
-
-        const observer = new MutationObserver((mutations) => {
-          let shouldRescan = false;
-
-          for (const mutation of mutations) {
-            if (mutation.type === "childList" && mutation.addedNodes.length) {
-              shouldRescan = true;
-              break;
-            }
-
-            if (
-              mutation.type === "attributes" &&
-              mutation.target instanceof Element &&
-              mutation.target.matches(COOKIE_BANNER_SELECTORS)
-            ) {
-              shouldRescan = true;
-              break;
-            }
+      function hideCookieBanners() {
+        document.querySelectorAll(selectors).forEach((el) => {
+          if (!el.hidden) el.hidden = true;
+          if (el.getAttribute("aria-hidden") !== "true") {
+            el.setAttribute("aria-hidden", "true");
           }
-
-          if (shouldRescan) suppressCookieBanners();
-        });
-
-        observer.observe(document.documentElement, {
-          subtree: true,
-          childList: true,
-          attributes: true,
-          attributeFilter: ["class", "id", "style", "hidden", "aria-hidden"]
-        });
-
-        /* Some third-party scripts reveal the banner shortly after load. */
-        window.addEventListener("load", () => {
-          suppressCookieBanners();
-          setTimeout(suppressCookieBanners, 250);
-          setTimeout(suppressCookieBanners, 1000);
-          setTimeout(suppressCookieBanners, 2500);
         });
       }
 
       if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", startCookieBannerGuard, { once: true });
+        document.addEventListener("DOMContentLoaded", hideCookieBanners, { once: true });
       } else {
-        startCookieBannerGuard();
+        hideCookieBanners();
       }
+
+      /* No attribute MutationObserver here: CSS above already hides future banners,
+         and avoiding an observer prevents self-triggering mutation loops. */
+      window.addEventListener("load", hideCookieBanners, { once: true });
     })();
   </script>
 
